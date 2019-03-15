@@ -22,7 +22,7 @@ call :MsgBox "This will stop Host Service and perform automated Reachback Upgrad
 :PreUpgrade_Backup
 sqlcmd -E -Q "Restore log Squirrel with Recovery" >NUL
 sqlcmd -E -Q "Restore log SquirrelCRM with Recovery" >NUL
-for /f "usebackq" %%i in (`PowerShell $date ^= Get-Date^; $date ^= $date.AddDays^(0^)^; $date.ToString^('MM-dd-yyyy'^)`) do set date=%%i
+for /f "usebackq" %%i in (`PowerShell $date ^= Get-Date^; $date ^= $date.AddDays^(0^)^; $date.ToString^('yyyy-MM-dd'^)`) do set date=%%i
 
 mkdir "C:\Agent\upgrade backups\%date%\databasebackups"
 
@@ -121,6 +121,7 @@ ECHO GOTO CHECK			>> "%TEMP%\UpgradeWatchdog.bat"
 ECHO EXIT			>> "%TEMP%\UpgradeWatchdog.bat"
 START /min "Upgrade Watchdog" "%TEMP%\UpgradeWatchdog.bat"
 
+mklink "%~dp0\SquirrelSetup.log" "%TEMP%\Setup Log %Date% #001.txt"
 FOR /F %%i IN ('dir /b ^| find /i "RemoteUpgrade"') DO (%%i SP- /SILENT /NORESTART /NOCANCEL /CLOSEAPPLICATIONS /NOARCHIVE)
 
 TASKKILL /FI "windowtitle eq  Administrator: Upgrade Watchdog*" /F /T 

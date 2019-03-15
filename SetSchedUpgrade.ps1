@@ -5,6 +5,7 @@
 }
 
 $UpgradePath = ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.bat')
+$LogPath = ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.log')
 $DatePrompt = {
 try{
 $SchedDate  = Read-Host -Prompt 'Enter the DATE you would like to schedule the upgrade for (e.g. 04/24/2018)'
@@ -44,7 +45,7 @@ REG IMPORT EULA.reg
 Clear-Host
 MsgBox "Please enter the Windows password in the next prompt and press Enable to allow unattended reboot for the upgrade" "Unattended Upgrade"
 Start-Process -FilePath "Autologon.exe" -Wait
-schtasks /create /tn "RB_Upgrade" /tr "'$UpgradePath' silent" /SC ONCE /SD $SchedDate /ST $SchedTime /ru system
+schtasks /create /tn "RB_Upgrade" /tr "'$UpgradePath' silent > '$LogPath' 2>&1" /SC ONCE /SD $SchedDate /ST $SchedTime /ru system
 EXIT
 }
 
