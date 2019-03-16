@@ -6,9 +6,6 @@ if "%ERRORLEVEL%" gtr "0" goto ERROR1
 goto FIN
 
 :FIN
-echo Task Scheduler will now launch, please confirm task was created successfully
-PAUSE
-taskschd.msc
 EXIT
 
 :ERROR1

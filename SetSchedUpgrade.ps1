@@ -46,6 +46,8 @@ Clear-Host
 MsgBox "Please enter the Windows password in the next prompt and press Enable to allow unattended reboot for the upgrade" "Unattended Upgrade"
 Start-Process -FilePath "Autologon.exe" -Wait
 schtasks /create /tn "RB_Upgrade" /tr "'$UpgradePath' silent > '$LogPath' 2>&1" /SC ONCE /SD $SchedDate /ST $SchedTime /ru system
+MsgBox "Task Scheduler will now launch, please confirm task was created successfully" "Unattended Upgrade"
+Start-Process -FilePath "taskschd.msc" -Wait
 EXIT
 }
 
