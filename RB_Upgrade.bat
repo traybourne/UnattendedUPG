@@ -121,6 +121,7 @@ ECHO GOTO CHECK			>> "%TEMP%\UpgradeWatchdog.bat"
 ECHO EXIT			>> "%TEMP%\UpgradeWatchdog.bat"
 START /min "Upgrade Watchdog" "%TEMP%\UpgradeWatchdog.bat"
 
+if exist "%~dp0\SquirrelSetup.log" del "%~dp0\SquirrelSetup.log"
 mklink "%~dp0\SquirrelSetup.log" "%TEMP%\Setup Log %Date% #001.txt"
 FOR /F %%i IN ('dir /b ^| find /i "RemoteUpgrade"') DO (%%i SP- /SILENT /NORESTART /NOCANCEL /CLOSEAPPLICATIONS /NOARCHIVE)
 
