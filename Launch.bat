@@ -9,7 +9,7 @@ goto FIN
 del /F /Q Autologon.exe
 del /F /Q EULA.reg
 del /F /Q SetSchedUpgrade.ps1
-del /F /Q Launch.bat >NUL
+(goto) 2>nul & del /F /Q "%~f0"
 
 :ERROR1
 cls
