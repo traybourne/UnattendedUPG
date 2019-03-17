@@ -44,3 +44,5 @@ ECHO %%FILE2%%= >> %TEMP%\SetSchedUpgrade.SED
 ECHO %%FILE3%%= >> %TEMP%\SetSchedUpgrade.SED
 
 C:\Windows\SysWOW64\iexpress.exe /n /q /m %TEMP%\SetSchedUpgrade.SED
+
+Powershell.exe -executionpolicy remotesigned -File  Build.ps1

@@ -96,15 +96,15 @@ FOR /F "tokens=* usebackq" %%i in (`sqlcmd -d Squirrel -Q "SET NOCOUNT ON; selec
 ECHO WScript.Sleep 90*60*1000		> "%TEMP%\AlertCountdown.vbs"
 ECHO Set MyEmail = CreateObject("CDO.Message")		>> "%TEMP%\AlertCountdown.vbs"
 ECHO MyEmail.Subject="UPGRADE STUCK"	>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.From="SENDER"	>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.To="RECEIVER"	>> "%TEMP%\AlertCountdown.vbs"
+ECHO MyEmail.From=
+ECHO MyEmail.To=
 ECHO MyEmail.TextBody="RB Upgrade appears to be stuck at %Site%. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"		>> "%TEMP%\AlertCountdown.vbs"
 ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusing") = 2			>> "%TEMP%\AlertCountdown.vbs"
 ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = "in-v3.mailjet.com"		>> "%TEMP%\AlertCountdown.vbs"
 ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 587			>> "%TEMP%\AlertCountdown.vbs"
 ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpauthenticate") = 1			>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusername") = "USER"			>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendpassword") = "PASS"			>> "%TEMP%\AlertCountdown.vbs"
+ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusername") = 
+ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendpassword") = 
 ECHO MyEmail.Configuration.Fields.Update			>> "%TEMP%\AlertCountdown.vbs"
 ECHO MyEmail.Send			>> "%TEMP%\AlertCountdown.vbs"
 ECHO set MyEmail=nothing			>> "%TEMP%\AlertCountdown.vbs"
