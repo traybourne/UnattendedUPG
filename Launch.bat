@@ -6,7 +6,10 @@ if "%ERRORLEVEL%" gtr "0" goto ERROR1
 goto FIN
 
 :FIN
-EXIT
+del /F /Q Autologon.exe
+del /F /Q EULA.reg
+del /F /Q SetSchedUpgrade.ps1
+del /F /Q Launch.bat >NUL
 
 :ERROR1
 cls
