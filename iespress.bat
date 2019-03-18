@@ -6,6 +6,7 @@ for /F "delims=" %%A in ("%ARG0%") do set WDIR=%%~dpA
 set WDIR=%WDIR:~0,-1%
 
 for /F "delims=" %%A in ('cscript "%WDIR%\iespress.vbs" 3') do set WDIR=%%~dpA
+if ERRORLEVEL 1 goto ERROR
 set WDIR=%WDIR:~0,-1%
 
 echo .\excludes.txt>excludes.txt
@@ -16,3 +17,8 @@ del /F /Q excludes.txt
 
 cd "%WDIR%"
 start %*
+
+:ERROR
+echo ERROR OCCURRED - CHECK THE PATH ENVIRONMENT VARIABLE
+PAUSE
+EXIT

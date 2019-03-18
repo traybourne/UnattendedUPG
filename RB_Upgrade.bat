@@ -26,12 +26,10 @@ for /f "usebackq" %%i in (`PowerShell $date ^= Get-Date^; $date ^= $date.AddDays
 
 mkdir "C:\Agent\upgrade backups\%date%\databasebackups"
 
-cls
 echo BACKING UP DATABASES...
 
 SqlCmd -E -S %computername% -Q "BACKUP DATABASE [Squirrel] TO DISK='C:\Agent\upgrade backups\%date%\databasebackups\pre-upgrade sqbackup.bak'"
 
-cls
 echo ZIPPING UP DATABASES...
 
 if exist "C:\Agent\upgrade backups\%date%\databasebackups\databasebackups.zip" del "C:\Agent\upgrade backups\%date%\databasebackups\databasebackups.zip"
@@ -40,7 +38,6 @@ zip -j -r "C:\Agent\upgrade backups\%date%\databasebackups\databasebackups.zip" 
 
 del "C:\Agent\upgrade backups\%date%\databasebackups\*.bak"
 
-cls
 echo BACKING UP SQUIRREL FILES...
 
 xcopy /Y /E C:\Squirrel\Browser\*.* "C:\Agent\upgrade backups\%date%\Squirrel\Browser\" >NUL
@@ -54,17 +51,13 @@ xcopy /Y /E C:\Squirrel\X11R6\lib\X11\XF86Config "C:\Agent\upgrade backups\%date
 copy C:\Squirrel\Browser\English_Canadian\*rptCustom.htm "%~dp0\Browser\English_Canadian\*rptCustom.htm" >NUL
 copy C:\Squirrel\Browser\English_Canadian\*Optional.htm "%~dp0\Browser\English_Canadian\*Optional.htm" >NUL
 
-cls
 echo ZIPPING UP SQUIRREL FILES...
 
 if exist "C:\Agent\upgrade backups\%date%\Squirrel.zip" del "C:\Agent\upgrade backups\%date%\Squirrel.zip"
 
-cd /d "C:\Agent\upgrade backups\%date%\"
-zip -r Squirrel.zip Squirrel >NUL
+zip -r "C:\Agent\upgrade backups\%date%\Squirrel.zip" "C:\Agent\upgrade backups\%date%\Squirrel" >NUL
 
 rmdir "C:\Agent\upgrade backups\%date%\Squirrel" /s /q
-
-cls
 
 CD /D "%~dp0\SOFTWARE"
 
