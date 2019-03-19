@@ -36,7 +36,7 @@ try{
 $SchedTime  = InputBox "Enter the TIME you would like to schedule the upgrade for in 24 hour format (e.g. 03:00:00)"
 if (!$SchedTime) { Exit }
 if ($SchedTime -match '^\w\w\:\w\w\:\w\w$') {
-    $pattern = 'hh\:mm\:ss'
+    $pattern = 'HH\:mm\:ss'
 }
 
 [DateTime]::ParseExact($SchedTime, $pattern, $culture)
