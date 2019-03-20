@@ -6,7 +6,7 @@ $USER       = $ini[2].split("=")[1]
 $PASS      = $ini[3].split("=")[1]
 
 $newContent = Get-Content ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.ps1') | Foreach {
-    if ($_ -like "*ECHO MyEmail.From=*")
+    if ($_ -like "*MyEmail.From=*")
     {
         "$_ `"$SENDER`""
     }
@@ -18,7 +18,7 @@ $newContent = Get-Content ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgr
 $newContent | Set-Content ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.ps1')
 
 $newContent = Get-Content ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.ps1') | Foreach {
-    if ($_ -like "*ECHO MyEmail.To=*")
+    if ($_ -like "*MyEmail.To=*")
     {
         "$_ `"$RECEIVER`""
     }
@@ -30,7 +30,7 @@ $newContent = Get-Content ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgr
 $newContent | Set-Content ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.ps1')
 
 $newContent = Get-Content ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.ps1') | Foreach {
-    if ($_ -like "*ECHO MyEmail.Configuration.Fields.Item (`"http://schemas.microsoft.com/cdo/configuration/sendusername`") =*")
+    if ($_ -like "*MyEmail.Configuration.Fields.Item (`"http://schemas.microsoft.com/cdo/configuration/sendusername`") =*")
     {
         "$_ `"$USER`""
     }
@@ -42,7 +42,7 @@ $newContent = Get-Content ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgr
 $newContent | Set-Content ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.ps1')
 
 $newContent = Get-Content ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.ps1') | Foreach {
-    if ($_ -like "*ECHO MyEmail.Configuration.Fields.Item (`"http://schemas.microsoft.com/cdo/configuration/sendpassword`") =*")
+    if ($_ -like "*MyEmail.Configuration.Fields.Item (`"http://schemas.microsoft.com/cdo/configuration/sendpassword`") =*")
     {
         "$_ `"$PASS`""
     }

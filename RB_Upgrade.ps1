@@ -92,10 +92,11 @@ new-item "C:\\Agent" -type directory -force
 copy-item "$env:SQCURDIR\tftpboot\bootptab*.*" "C:\Agent" -force
 
 #SQL_Rename
-#FOR /F "delims= " %%i in ('SQLCMD -E -Q "sp_helpserver" ^| findstr "[0-9]"') do (SET "SQL_CURRENT=%%i")
-#IF /I "%SQL_CURRENT%"=="%COMPUTERNAME%" goto RemoteUpgrade
-#SQLCMD -E -Q "sp_dropserver '%SQL_CURRENT%'"
-#SQLCMD -E -Q "sp_addserver '%COMPUTERNAME%', local"
+$SQL_CURRENT = & sqlcmd -E -Q "SET NOCOUNT ON; select @@SERVERNAME" -W -h-1
+if ($SQL_CURRENT -ne $env:COMPUTERNAME) {
+& SQLCMD -E -Q "sp_dropserver '$SQL_CURRENT'"
+& SQLCMD -E -Q "sp_addserver '$env:COMPUTERNAME', local"
+}
 
 #RemoteUpgrade
 Remove-Item "$CurDir\SquirrelSetup.log" -force -ErrorAction 'silentlycontinue'
@@ -106,14 +107,14 @@ ForEach ($exe in get-ChildItem "$env:SQCURDIR\Program\*.exe") {
 }
 
 NET STOP VxAgent /yes
-stop-process -name VxAgent.exe -force -ErrorAction 'silentlycontinue'
-stop-process -name mmc.exe -force -ErrorAction 'silentlycontinue'
+taskkill /f /im VxAgent.exe
+taskkill /f /im mmc.exe
 NET STOP MSSQLSERVER /yes
-stop-process -name sqlservr.exe -force -ErrorAction 'silentlycontinue'
+taskkill /f /im sqlservr.exe
 NET START MSSQLSERVER
 Rename-ItemProperty -path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -name PendingFileRenameOperations -newname PendingFileRenameOperationsBAK -ErrorAction 'silentlycontinue'
 
-#FOR /F "tokens=* usebackq" %%i in (`sqlcmd -d Squirrel -Q "SET NOCOUNT ON; select Name,Address1,Phone from K_Store" -W -h-1`) do set Site=%%i
+$Site = & sqlcmd -d Squirrel -Q "SET NOCOUNT ON; select Name,Address1,Phone from K_Store" -W -h-1
 
 $AlertCountdown = @"
 WScript.Sleep 90*60*1000
@@ -156,7 +157,9 @@ Start-Process -FilePath "$CurDir\Software\*RemoteUpgrade*.exe" -ArgumentList "/S
 
 #Custom
 Start-Sleep -s 5
-#FOR /F "DELIMS=" %%i IN ('DIR /B /S Custom ^| findstr /e "sql"') DO (SQLCMD -E -d SQUIRREL -i "%%i")
+ForEach ($sql in get-ChildItem "Custom\*.sql") {
+	& SQLCMD -E -d SQUIRREL -i "$sql"
+}
 copy-item "Custom\*.class" "$env:SQCURDIR\Program\Pos\Extended" -force
 
 #HTM
