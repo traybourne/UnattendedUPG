@@ -48,8 +48,8 @@ xcopy /Y /E C:\Squirrel\Posdata\*.* "C:\Agent\upgrade backups\%date%\Squirrel\Po
 xcopy /Y /E C:\Squirrel\Program\*.* "C:\Agent\upgrade backups\%date%\Squirrel\Program\" >NUL
 xcopy /Y /E C:\Squirrel\tftpboot\*.* "C:\Agent\upgrade backups\%date%\Squirrel\tftpboot\" >NUL
 xcopy /Y /E C:\Squirrel\X11R6\lib\X11\XF86Config "C:\Agent\upgrade backups\%date%\Squirrel\X11R6\lib\X11\" >NUL
-copy C:\Squirrel\Browser\English_Canadian\*rptCustom.htm "%~dp0\Browser\English_Canadian\*rptCustom.htm" >NUL
-copy C:\Squirrel\Browser\English_Canadian\*Optional.htm "%~dp0\Browser\English_Canadian\*Optional.htm" >NUL
+copy /Y C:\Squirrel\Browser\English_Canadian\*rptCustom.htm "Software\Browser\English_Canadian\*rptCustom.htm" >NUL
+copy /Y C:\Squirrel\Browser\English_Canadian\*Optional.htm "Software\Browser\English_Canadian\*Optional.htm" >NUL
 
 echo ZIPPING UP SQUIRREL FILES...
 
@@ -59,7 +59,10 @@ zip -r "C:\Agent\upgrade backups\%date%\Squirrel.zip" "C:\Agent\upgrade backups\
 
 rmdir "C:\Agent\upgrade backups\%date%\Squirrel" /s /q
 
-CD /D "%~dp0\SOFTWARE"
+if exist "SquirrelSetup.log" del "SquirrelSetup.log"
+mklink "SquirrelSetup.log" "%TEMP%\Setup Log %Date% #001.txt"
+
+CD /D "SOFTWARE"
 
 if ERRORLEVEL 1 goto ERROR2
 
@@ -114,8 +117,6 @@ ECHO GOTO CHECK			>> "%TEMP%\UpgradeWatchdog.bat"
 ECHO EXIT			>> "%TEMP%\UpgradeWatchdog.bat"
 START /min "Upgrade Watchdog" "%TEMP%\UpgradeWatchdog.bat"
 
-if exist "%~dp0\SquirrelSetup.log" del "%~dp0\SquirrelSetup.log"
-mklink "%~dp0\SquirrelSetup.log" "%TEMP%\Setup Log %Date% #001.txt"
 FOR /F %%i IN ('dir /b ^| find /i "RemoteUpgrade"') DO (%%i SP- /SILENT /NORESTART /NOCANCEL /CLOSEAPPLICATIONS /NOARCHIVE)
 
 TASKKILL /FI "windowtitle eq  Administrator: Upgrade Watchdog*" /F /T 
