@@ -1,31 +1,57 @@
 $Silent = $args[0]
+$CurDir = (Split-Path $MyInvocation.Mycommand.Path)
+$ERROR = {
+MsgBox "Reachback Upgrade cancelled" "Critical" "Unattended Upgrade"
+EXIT
+}
+$ERROR2 = {
+$Alert = @"
+Set MyEmail = CreateObject("CDO.Message")
+MyEmail.Subject="UPGRADE FAILED"
+MyEmail.From=
+MyEmail.To=
+MyEmail.TextBody="RB Upgrade appears to have failed at $Site. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
+MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusing") = 2
+MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = "in-v3.mailjet.com"
+MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 587
+MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpauthenticate") = 1
+MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusername") =
+MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendpassword") =
+MyEmail.Configuration.Fields.Update
+MyEmail.Send
+set MyEmail=nothing
+"@
+$Alert | Set-Content "$env:TEMP\Alert.vbs" -Encoding ASCII
+Start-Process -FilePath "$env:TEMP\Alert.vbs" -WindowStyle Hidden
+Start-Sleep -s 10
+EXIT
+}
 
+$Script = {
 Function MsgBox($Message, $Type, $Title)
 {
    [void][System.Reflection.Assembly]::LoadWithPartialName("Microsoft.VisualBasic")
    [Microsoft.VisualBasic.Interaction]::MsgBox($Message, "SystemModal, $Type", $Title)
 }
 
-$CurDir = (Split-Path $MyInvocation.Mycommand.Path)
-
 if ($Silent -ne "silent") {
 $Prompt = MsgBox "This will stop Host Service and perform automated Reachback Upgrade - Continue?" "YesNo" "Unattended Upgrade"
 switch ($Prompt) {
-    "No" { EXIT }
+    "No" { & $ERROR }
 }}
 
 #PreUpgrade_Backup
-& sqlcmd -E -Q "Restore log Squirrel with Recovery" 2>$null
-& sqlcmd -E -Q "Restore log SquirrelCRM with Recovery" 2>$null
+& sqlcmd -E -Q "Restore log Squirrel with Recovery" >$null
+& sqlcmd -E -Q "Restore log SquirrelCRM with Recovery" >$null
 $Date = Get-Date -Format "yyyy-MM-dd"
 
 new-item "C:\Agent\upgrade backups\$Date\databasebackups" -type directory -force
 
-Write-Host BACKING UP DATABASES...
+Write-Output "BACKING UP DATABASES..."
 
-& SqlCmd -E -Q "BACKUP DATABASE [Squirrel] TO DISK='C:\Agent\upgrade backups\`"$Date`"\databasebackups\pre-upgrade sqbackup.bak'"
+& SqlCmd -E -Q "BACKUP DATABASE [Squirrel] TO DISK='C:\Agent\upgrade backups\$Date\databasebackups\pre-upgrade sqbackup.bak'"
 
-Write-Host ZIPPING UP DATABASES...
+Write-Output "ZIPPING UP DATABASES..."
 
 Remove-Item "C:\Agent\upgrade backups\$Date\databasebackups\databasebackups.zip" -force -ErrorAction 'silentlycontinue'
 
@@ -33,12 +59,12 @@ Remove-Item "C:\Agent\upgrade backups\$Date\databasebackups\databasebackups.zip"
 
 Remove-Item "C:\Agent\upgrade backups\$Date\databasebackups\*.bak" -Force
 
-Write-Host BACKING UP SQUIRREL FILES...
+Write-Output "BACKING UP SQUIRREL FILES..."
 
 copy-item "C:\\Squirrel\\Browser" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
-copy-item "C:\\Squirrel\\Custom" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
+copy-item "C:\\Squirrel\\Custom" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse -ErrorAction 'silentlycontinue'
 copy-item "C:\\Squirrel\\etc" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
-copy-item "C:\\Squirrel\\Host" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
+copy-item "C:\\Squirrel\\Host" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse -ErrorAction 'silentlycontinue'
 copy-item "C:\\Squirrel\\Posdata" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
 copy-item "C:\\Squirrel\\Program" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
 copy-item "C:\\Squirrel\\tftpboot" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
@@ -48,7 +74,7 @@ new-item "$CurDir\\Software\\Browser\\English_Canadian" -type directory -force
 copy-item "C:\\Squirrel\\Browser\\English_Canadian\\*rptCustom.htm" "$CurDir\\Software\\Browser\\English_Canadian" -force
 copy-item "C:\\Squirrel\\Browser\\English_Canadian\\*Optional.htm" "$CurDir\\Software\\Browser\\English_Canadian" -force
 
-Write-Host ZIPPING UP SQUIRREL FILES...
+Write-Output "ZIPPING UP SQUIRREL FILES..."
 
 Remove-Item "C:\Agent\upgrade backups\$Date\Squirrel.zip" -force -ErrorAction 'silentlycontinue'
 
@@ -56,14 +82,14 @@ CD "C:\Agent\upgrade backups\$Date"
 
 & zip -r "Squirrel.zip" "Squirrel" >$null
 
-Remove-Item –path "C:\Agent\upgrade backups\$Date\Squirrel" –recurse -force
+Remove-Item "C:\Agent\upgrade backups\$Date\Squirrel" -recurse -force
 
 CD "$CurDir\Software"
 #if ERRORLEVEL 1 goto ERROR2
 
 #Bootptab_Backup
 new-item "C:\\Agent" -type directory -force
-copy-item "%SQCURDIR%\tftpboot\bootptab*.*" "C:\Agent" -force
+copy-item "$env:SQCURDIR\tftpboot\bootptab*.*" "C:\Agent" -force
 
 #SQL_Rename
 #FOR /F "delims= " %%i in ('SQLCMD -E -Q "sp_helpserver" ^| findstr "[0-9]"') do (SET "SQL_CURRENT=%%i")
@@ -72,100 +98,104 @@ copy-item "%SQCURDIR%\tftpboot\bootptab*.*" "C:\Agent" -force
 #SQLCMD -E -Q "sp_addserver '%COMPUTERNAME%', local"
 
 #RemoteUpgrade
-Remove-Item –path "SquirrelSetup.log" -force -ErrorAction 'silentlycontinue'
-cmd /c mklink "SquirrelSetup.log" "%TEMP%\Setup Log $Date #001.txt"
-#FOR /F "delims=" %%i IN ('dir /b /a /s "%SQCURDIR%" ^| findstr /e "exe"') DO (taskkill /f /im "%%~nxi")
-ForEach ($exe in get-ChildItem "$env:SQCURDIR\Squirrel\*.exe") {
-	stop-process -name "$exe" -force
+Remove-Item "$CurDir\SquirrelSetup.log" -force -ErrorAction 'silentlycontinue'
+cmd /c mklink "$CurDir\SquirrelSetup.log" "$env:TEMP\Setup Log $Date #001.txt"
+
+ForEach ($exe in get-ChildItem "$env:SQCURDIR\Program\*.exe") {
+	stop-process -name "$exe" -force -ErrorAction 'silentlycontinue'
 }
 
-NET STOP VxAgent
-stop-process -name VxAgent.exe -force
-stop-process -name mmc.exe -force
-NET STOP MSSQLSERVER
-stop-process -name sqlservr.exe -force
+NET STOP VxAgent /yes
+stop-process -name VxAgent.exe -force -ErrorAction 'silentlycontinue'
+stop-process -name mmc.exe -force -ErrorAction 'silentlycontinue'
+NET STOP MSSQLSERVER /yes
+stop-process -name sqlservr.exe -force -ErrorAction 'silentlycontinue'
 NET START MSSQLSERVER
-Rename-ItemProperty -path "'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager'" -name PendingFileRenameOperations -newname PendingFileRenameOperationsBAK -ErrorAction 'silentlycontinue'
+Rename-ItemProperty -path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -name PendingFileRenameOperations -newname PendingFileRenameOperationsBAK -ErrorAction 'silentlycontinue'
 
 #FOR /F "tokens=* usebackq" %%i in (`sqlcmd -d Squirrel -Q "SET NOCOUNT ON; select Name,Address1,Phone from K_Store" -W -h-1`) do set Site=%%i
 
-ECHO WScript.Sleep 90*60*1000		> "%TEMP%\AlertCountdown.vbs"
-ECHO Set MyEmail = CreateObject("CDO.Message")		>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.Subject="UPGRADE STUCK"	>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.From= "sqcorpservices@gmail.com"	>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.To= "rdavis@squirrelsystems.com"	>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.TextBody="RB Upgrade appears to be stuck at %Site%. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"		>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusing") = 2			>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = "in-v3.mailjet.com"		>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 587			>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpauthenticate") = 1			>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusername") =  "474901cc35fecf00d8fe6368edbe1160"			>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendpassword") =  "7265c3e68a5d59d6e3411a1d8a597576"			>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.Configuration.Fields.Update			>> "%TEMP%\AlertCountdown.vbs"
-ECHO MyEmail.Send			>> "%TEMP%\AlertCountdown.vbs"
-ECHO set MyEmail=nothing			>> "%TEMP%\AlertCountdown.vbs"
-START /min "Alert Countdown" "%TEMP%\AlertCountdown.vbs"
+$AlertCountdown = @"
+WScript.Sleep 90*60*1000
+Set MyEmail = CreateObject("CDO.Message")
+MyEmail.Subject="UPGRADE STUCK"
+MyEmail.From=
+MyEmail.To=
+MyEmail.TextBody="RB Upgrade appears to be stuck at $Site. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
+MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusing") = 2
+MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = "in-v3.mailjet.com"
+MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 587
+MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpauthenticate") = 1
+MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusername") =
+MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendpassword") =
+MyEmail.Configuration.Fields.Update
+MyEmail.Send
+set MyEmail=nothing
+"@
+$AlertCountdown | Set-Content "$env:TEMP\AlertCountdown.vbs" -Encoding ASCII
+Start-Process -FilePath "$env:TEMP\AlertCountdown.vbs" -WindowStyle Hidden
 
-ECHO @ECHO OFF			> "%TEMP%\UpgradeWatchdog.bat"
-ECHO :CHECK			>> "%TEMP%\UpgradeWatchdog.bat"
-ECHO TIMEOUT /T 30 /NOBREAK	>> "%TEMP%\UpgradeWatchdog.bat"
-ECHO TASKKILL /F /IM NET1.EXE	>> "%TEMP%\UpgradeWatchdog.bat"
-ECHO TASKKILL /F /IM LABOUR.EXE	>> "%TEMP%\UpgradeWatchdog.bat"
-ECHO TASKKILL /F /IM LABOUR.TMP	>> "%TEMP%\UpgradeWatchdog.bat"
-ECHO NET START MSSQLSERVER	>> "%TEMP%\UpgradeWatchdog.bat"
-ECHO GOTO CHECK			>> "%TEMP%\UpgradeWatchdog.bat"
-ECHO EXIT			>> "%TEMP%\UpgradeWatchdog.bat"
-START /min "Upgrade Watchdog" "%TEMP%\UpgradeWatchdog.bat"
+$UpgradeWatchdog = @"
+@ECHO OFF
+:CHECK
+TIMEOUT /T 30 /NOBREAK
+TASKKILL /F /IM NET1.EXE
+TASKKILL /F /IM LABOUR.EXE
+TASKKILL /F /IM LABOUR.TMP
+NET START MSSQLSERVER
+GOTO CHECK
+EXIT
+"@
+$UpgradeWatchdog | Set-Content "$env:TEMP\UpgradeWatchdog.bat" -Encoding ASCII
+Start-Process -FilePath "$env:TEMP\UpgradeWatchdog.bat" -WindowStyle Hidden
 
-FOR /F %%i IN ('dir /b ^| find /i "RemoteUpgrade"') DO (%%i SP- /SILENT /NORESTART /NOCANCEL /CLOSEAPPLICATIONS /NOARCHIVE)
+Start-Process -FilePath "$CurDir\Software\*RemoteUpgrade*.exe" -ArgumentList "/SILENT /NORESTART /NOCANCEL /CLOSEAPPLICATIONS /NOARCHIVE" -Wait
 
-TASKKILL /FI "windowtitle eq  Administrator: Upgrade Watchdog*" /F /T 
-TASKKILL /FI "windowtitle eq  Upgrade Watchdog*" /F /T 
+#TASKKILL /FI "windowtitle eq  Administrator: Upgrade Watchdog*" /F /T 
+#TASKKILL /FI "windowtitle eq  Upgrade Watchdog*" /F /T 
 
-:Custom
-TIMEOUT /T 5 /NOBREAK >NUL
-FOR /F "DELIMS=" %%i IN ('DIR /B /S Custom ^| findstr /e "sql"') DO (SQLCMD -E -d SQUIRREL -i "%%i")
-COPY /Y "Custom\*.class" "%SQCURDIR%\Program\Pos\Extended\*.class"
+#Custom
+Start-Sleep -s 5
+#FOR /F "DELIMS=" %%i IN ('DIR /B /S Custom ^| findstr /e "sql"') DO (SQLCMD -E -d SQUIRREL -i "%%i")
+copy-item "Custom\*.class" "$env:SQCURDIR\Program\Pos\Extended" -force
 
-:HTM
-COPY /Y "Browser\English_Canadian\*.*" "%SQCURDIR%\Browser\English_Canadian\*.*"
+#HTM
+copy-item "Browser\English_Canadian\*" "$env:SQCURDIR\Browser\English_Canadian" -force
 
-:Program
-COPY /Y "Program\*.*" "%SQCURDIR%\Program\*.*"
+#Program
+copy-item "Program\*" "$env:SQCURDIR\Program" -force -recurse
 
-:Drivers
-COPY /Y "Drivers\*.*" "%SQCURDIR%\Program\Drivers\*.*"
+#Drivers
+copy-item "Drivers\*" "$env:SQCURDIR\Program\Drivers" -force
 
-:Bootptab_Update
-taskkill /f /im "bootpdnt.exe"
-taskkill /f /im "tftpdnt.exe"
-COPY /Y "C:\Agent\bootptab*.*" "%SQCURDIR%\tftpboot"
+#Bootptab_Update
+stop-process -name "bootpdnt.exe" -force -ErrorAction 'silentlycontinue'
+stop-process -name "tftpdnt.exe" -force -ErrorAction 'silentlycontinue'
+copy-item "C:\Agent\bootptab*" "$env:SQCURDIR\tftpboot" -force
 net start tftpdnt
 net start bootpdnt
-SqShutdown -AUTOEXIT
-TIMEOUT /T 2 /NOBREAK >NUL 
+& SqShutdown -AUTOEXIT
+Start-Sleep -s 2
 
-:END
-COPY "+Upgrade_Confirmation_Message.pdf" c:\agent /y
+#END
+copy-item "+Upgrade_Confirmation_Message.pdf" "c:\agent" -force
 
-powershell.exe -Command "Rename-ItemProperty -path "'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager'" -name PendingFileRenameOperationsBAK -newname PendingFileRenameOperations" >NUL
-ECHO @ECHO OFF			> "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cleanup.bat"
-ECHO REG COPY "HKLM\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK" "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" /F >> "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cleanup.bat"
-ECHO explorer.exe "c:\agent\+Upgrade_Confirmation_Message.pdf" >> "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cleanup.bat"
-ECHO SCHTASKS /delete /tn RB_Upgrade /f >> "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cleanup.bat"
-ECHO DEL "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cleanup.bat" >> "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cleanup.bat"
-ECHO EXIT >> "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cleanup.bat"
+Rename-ItemProperty -path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -name PendingFileRenameOperationsBAK -newname PendingFileRenameOperations -ErrorAction 'silentlycontinue'
+$Cleanup = @"
+@ECHO OFF
+REG COPY "HKLM\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK" "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" /F
+explorer.exe "c:\agent\+Upgrade_Confirmation_Message.pdf"
+SCHTASKS /delete /tn RB_Upgrade /f
+DEL "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cleanup.bat"
+EXIT
+"@
+$Cleanup | Set-Content "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cleanup.bat" -Encoding ASCII
 
-TIMEOUT /T 2 /NOBREAK >NUL    
-shutdown /r /f /t 05
+Start-Sleep -s 2  
+& shutdown /r /f /t 05
 
 EXIT
 
-:ERROR
-call :MsgBox "Reachback Upgrade cancelled" "vbCritical+vbSystemModal" "%TITLE%"
-EXIT
 
-:ERROR2
-call :MsgBox "ERROR OCCURRED - PLEASE ENSURE FILES HAVE BEEN EXTRACTED" "vbCritical+vbSystemModal" "%TITLE%"
-EXIT
-
+}
+& $Script | Out-file "$CurDir\RB_Upgrade.log" -Encoding ASCII

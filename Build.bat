@@ -40,7 +40,7 @@ ECHO FILE2="Launch.bat" >> %TEMP%\SetSchedUpgrade.SED
 ECHO FILE3="SetSchedUpgrade.ps1" >> %TEMP%\SetSchedUpgrade.SED
 ECHO FILE4="iespress.bat" >> %TEMP%\SetSchedUpgrade.SED
 ECHO FILE5="iespress.vbs" >> %TEMP%\SetSchedUpgrade.SED
-ECHO FILE6="RB_Upgrade.bat" >> %TEMP%\SetSchedUpgrade.SED
+ECHO FILE6="RB_Upgrade.ps1" >> %TEMP%\SetSchedUpgrade.SED
 ECHO [SourceFiles] >> %TEMP%\SetSchedUpgrade.SED
 ECHO SourceFiles0=%~dp0\ >> %TEMP%\SetSchedUpgrade.SED
 ECHO [SourceFiles0] >> %TEMP%\SetSchedUpgrade.SED

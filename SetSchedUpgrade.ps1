@@ -10,7 +10,7 @@ Function InputBox($Message, $Title)
    [Microsoft.VisualBasic.Interaction]::InputBox($Message, $Title)
 }
 
-$UpgradePath = ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.bat')
+$UpgradePath = ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.ps1')
 $LogPath = ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.log')
 $DatePrompt = {
 try{
@@ -50,9 +50,9 @@ Clear-Host
 MsgBox "Please enter the Windows password in the next prompt and press Enable to allow unattended reboot for the upgrade" "Information" "Unattended Upgrade"
 Start-Process -FilePath "Autologon.exe" -Wait
 $Format = ($([System.Globalization.DateTimeFormatInfo]::CurrentInfo.ShortDatePattern) -replace 'M+/', 'MM/') -replace 'd+/', 'dd/'
-schtasks /create /tn "RB_Upgrade" /tr "'$UpgradePath' silent *> '$LogPath'" /SC ONCE /SD (get-date (get-date -Date "$SchedDate") -Format $Format) /ST $SchedTime /ru SYSTEM
+schtasks /create /tn "RB_Upgrade" /tr "'Powershell.exe' -executionpolicy remotesigned -File '$UpgradePath' silent" /SC ONCE /SD (get-date (get-date -Date "$SchedDate") -Format $Format) /ST $SchedTime /ru SYSTEM
 MsgBox "Task Scheduler will now launch, please confirm task was created successfully" "Information" "Unattended Upgrade"
-Start-Process -FilePath "taskschd.msc" -Wait
+Start-Process -FilePath "taskschd.msc"
 EXIT
 }
 
