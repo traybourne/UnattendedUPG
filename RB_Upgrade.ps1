@@ -1,10 +1,10 @@
 $Silent = $args[0]
 $CurDir = (Split-Path $MyInvocation.Mycommand.Path)
-$ERROR = {
+$Cancel = {
 MsgBox "Reachback Upgrade cancelled" "Critical" "Unattended Upgrade"
 EXIT
 }
-$ERROR2 = {
+$FAIL = {
 $Alert = @"
 Set MyEmail = CreateObject("CDO.Message")
 MyEmail.Subject="UPGRADE FAILED"
@@ -37,7 +37,7 @@ Function MsgBox($Message, $Type, $Title)
 if ($Silent -ne "silent") {
 $Prompt = MsgBox "This will stop Host Service and perform automated Reachback Upgrade - Continue?" "YesNo" "Unattended Upgrade"
 switch ($Prompt) {
-    "No" { & $ERROR }
+    "No" { & $Cancel }
 }}
 
 #PreUpgrade_Backup
