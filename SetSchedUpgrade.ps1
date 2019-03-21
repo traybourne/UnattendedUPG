@@ -44,9 +44,10 @@ if ($SchedTime -match '^\w\w\:\w\w\:\w\w$') {
         MsgBox "Time entered was invalid, try again" "Critical" "Unattended Upgrade"
         & $TimePrompt
         }
+Clear-Host
+Start-Sleep 2
 REG COPY "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" "HKLM\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK" /F
 REG IMPORT EULA.reg
-Clear-Host
 MsgBox "Please enter the Windows password in the next prompt and press Enable to allow unattended reboot for the upgrade" "Information" "Unattended Upgrade"
 Start-Process -FilePath "Autologon.exe" -Wait
 $Format = ($([System.Globalization.DateTimeFormatInfo]::CurrentInfo.ShortDatePattern) -replace 'M+/', 'MM/') -replace 'd+/', 'dd/'
