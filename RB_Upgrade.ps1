@@ -150,7 +150,8 @@ EXIT
 $UpgradeWatchdog | Set-Content "$env:TEMP\UpgradeWatchdog.bat" -Encoding ASCII
 Start-Process -FilePath "$env:TEMP\UpgradeWatchdog.bat" -WindowStyle Hidden
 
-Start-Process -FilePath "$CurDir\Software\*RemoteUpgrade*.exe" -ArgumentList "/SILENT /NORESTART /NOCANCEL /CLOSEAPPLICATIONS /NOARCHIVE" -Wait
+$p = Start-Process -passthru "$CurDir\Software\*RemoteUpgrade*.exe" -ArgumentList "/SILENT /NORESTART /NOCANCEL /CLOSEAPPLICATIONS /NOARCHIVE"
+$p.WaitForExit()
 
 #TASKKILL /FI "windowtitle eq  Administrator: Upgrade Watchdog*" /F /T 
 #TASKKILL /FI "windowtitle eq  Upgrade Watchdog*" /F /T 
@@ -201,4 +202,5 @@ EXIT
 
 
 }
+
 & $Script | Out-file "$CurDir\RB_Upgrade.log" -Encoding ASCII

@@ -13,14 +13,8 @@ del /F /Q SetSchedUpgrade.ps1
 
 :ERROR1
 cls
-echo Please wait...
-C:\Windows\System32\WindowsPowerShell\v1.0\Powershell.exe -executionpolicy remotesigned -File  SetSchedUpgrade.ps1
-if "%ERRORLEVEL%" gtr "0" goto ERROR2
+call :MsgBox "Powershell not found. Check the PATH variable and verify %%SYSTEMROOT%%\System32\WindowsPowerShell\v1.0\ exists." "vbCritical+vbSystemModal" "%TITLE%"
 goto FIN
-
-:ERROR2
-call :MsgBox "Powershell not found. Check the PATH variable" "vbCritical+vbSystemModal" "%TITLE%"
-EXIT
 
 :MsgBox prompt type title
     setlocal enableextensions
