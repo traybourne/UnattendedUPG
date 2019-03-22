@@ -1,5 +1,6 @@
 $Silent = $args[0]
 $CurDir = (Split-Path $MyInvocation.Mycommand.Path)
+$Site = & sqlcmd -d Squirrel -Q "SET NOCOUNT ON; select Name,Address1,Phone from K_Store" -W -h-1
 $Cancel = {
 MsgBox "Reachback Upgrade cancelled" "Critical" "Unattended Upgrade"
 EXIT
@@ -10,7 +11,8 @@ Set MyEmail = CreateObject("CDO.Message")
 MyEmail.Subject="UPGRADE FAILED"
 MyEmail.From=
 MyEmail.To=
-MyEmail.TextBody="RB Upgrade appears to have failed at $Site. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
+MyEmail.TextBody="RB Upgrade appears to have failed at $Site, log file is attached. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
+MyEmail.AddAttachment "$CurDir\RB_Upgrade.log"
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusing") = 2
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = "in-v3.mailjet.com"
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 587
@@ -22,7 +24,7 @@ MyEmail.Send
 set MyEmail=nothing
 "@
 $Alert | Set-Content "$env:TEMP\Alert.vbs" -Encoding ASCII
-Start-Process -FilePath "$env:TEMP\Alert.vbs" -WindowStyle Hidden
+Start-Process -FilePath "$env:TEMP\Alert.vbs"
 Start-Sleep -s 10
 EXIT
 }
@@ -45,7 +47,7 @@ switch ($Prompt) {
 & sqlcmd -E -Q "Restore log SquirrelCRM with Recovery" >$null
 $Date = Get-Date -Format "yyyy-MM-dd"
 
-new-item "C:\Agent\upgrade backups\$Date\databasebackups" -type directory -force
+New-Item "C:\Agent\upgrade backups\$Date\databasebackups" -type directory -force
 
 Write-Output "BACKING UP DATABASES..."
 
@@ -61,18 +63,18 @@ Remove-Item "C:\Agent\upgrade backups\$Date\databasebackups\*.bak" -Force
 
 Write-Output "BACKING UP SQUIRREL FILES..."
 
-copy-item "C:\\Squirrel\\Browser" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
-copy-item "C:\\Squirrel\\Custom" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse -ErrorAction 'silentlycontinue'
-copy-item "C:\\Squirrel\\etc" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
-copy-item "C:\\Squirrel\\Host" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse -ErrorAction 'silentlycontinue'
-copy-item "C:\\Squirrel\\Posdata" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
-copy-item "C:\\Squirrel\\Program" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
-copy-item "C:\\Squirrel\\tftpboot" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
-new-item "C:\\Agent\\upgrade backups\\$Date\\Squirrel\\X11R6\\lib\\X11\" -type directory -force
-copy-item "C:\\Squirrel\\X11R6\\lib\\X11\\XF86Config" "C:\\Agent\\upgrade backups\\$Date\\Squirrel\\X11R6\\lib\\X11\" -force
-new-item "$CurDir\\Software\\Browser\\English_Canadian" -type directory -force
-copy-item "C:\\Squirrel\\Browser\\English_Canadian\\*rptCustom.htm" "$CurDir\\Software\\Browser\\English_Canadian" -force
-copy-item "C:\\Squirrel\\Browser\\English_Canadian\\*Optional.htm" "$CurDir\\Software\\Browser\\English_Canadian" -force
+Copy-Item "C:\\Squirrel\\Browser" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
+Copy-Item "C:\\Squirrel\\Custom" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse -ErrorAction 'silentlycontinue'
+Copy-Item "C:\\Squirrel\\etc" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
+Copy-Item "C:\\Squirrel\\Host" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse -ErrorAction 'silentlycontinue'
+Copy-Item "C:\\Squirrel\\Posdata" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
+Copy-Item "C:\\Squirrel\\Program" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
+Copy-Item "C:\\Squirrel\\tftpboot" "C:\\Agent\\upgrade backups\\$Date\\Squirrel" -force -recurse
+New-Item "C:\\Agent\\upgrade backups\\$Date\\Squirrel\\X11R6\\lib\\X11\" -type directory -force
+Copy-Item "C:\\Squirrel\\X11R6\\lib\\X11\\XF86Config" "C:\\Agent\\upgrade backups\\$Date\\Squirrel\\X11R6\\lib\\X11\" -force
+New-Item "$CurDir\\Software\\Browser\\English_Canadian" -type directory -force
+Copy-Item "C:\\Squirrel\\Browser\\English_Canadian\\*rptCustom.htm" "$CurDir\\Software\\Browser\\English_Canadian" -force
+Copy-Item "C:\\Squirrel\\Browser\\English_Canadian\\*Optional.htm" "$CurDir\\Software\\Browser\\English_Canadian" -force
 
 Write-Output "ZIPPING UP SQUIRREL FILES..."
 
@@ -84,12 +86,12 @@ CD "C:\Agent\upgrade backups\$Date"
 
 Remove-Item "C:\Agent\upgrade backups\$Date\Squirrel" -recurse -force
 
+if (-not (Test-Path "$CurDir\Software\*RemoteUpgrade*.exe")) { & $FAIL }
 CD "$CurDir\Software"
-#if ERRORLEVEL 1 goto ERROR2
 
 #Bootptab_Backup
-new-item "C:\\Agent" -type directory -force
-copy-item "$env:SQCURDIR\tftpboot\bootptab*.*" "C:\Agent" -force
+New-Item "C:\\Agent" -type directory -force
+Copy-Item "$env:SQCURDIR\tftpboot\bootptab*.*" "C:\Agent" -force
 
 #SQL_Rename
 $SQL_CURRENT = & sqlcmd -E -Q "SET NOCOUNT ON; select @@SERVERNAME" -W -h-1
@@ -102,19 +104,17 @@ if ($SQL_CURRENT -ne $env:COMPUTERNAME) {
 Remove-Item "$CurDir\SquirrelSetup.log" -force -ErrorAction 'silentlycontinue'
 cmd /c mklink "$CurDir\SquirrelSetup.log" "$env:TEMP\Setup Log $Date #001.txt"
 
-ForEach ($exe in get-ChildItem "$env:SQCURDIR\Program\*.exe") {
-	stop-process -name "$exe" -force -ErrorAction 'silentlycontinue'
+ForEach ($exe in get-ChildItem "$env:SQCURDIR\Program" -Filter *.exe) {
+	TASKKILL /F /IM "$exe"
 }
 
 NET STOP VxAgent /yes
-taskkill /f /im VxAgent.exe
-taskkill /f /im mmc.exe
+TASKKILL /F /IM VxAgent.exe
+TASKKILL /F /IM mmc.exe
 NET STOP MSSQLSERVER /yes
-taskkill /f /im sqlservr.exe
+TASKKILL /F /IM sqlservr.exe
 NET START MSSQLSERVER
 Rename-ItemProperty -path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -name PendingFileRenameOperations -newname PendingFileRenameOperationsBAK -ErrorAction 'silentlycontinue'
-
-$Site = & sqlcmd -d Squirrel -Q "SET NOCOUNT ON; select Name,Address1,Phone from K_Store" -W -h-1
 
 $AlertCountdown = @"
 WScript.Sleep 90*60*1000
@@ -122,7 +122,8 @@ Set MyEmail = CreateObject("CDO.Message")
 MyEmail.Subject="UPGRADE STUCK"
 MyEmail.From=
 MyEmail.To=
-MyEmail.TextBody="RB Upgrade appears to be stuck at $Site. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
+MyEmail.TextBody="RB Upgrade appears to be stuck at $Site, log file is attached. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
+MyEmail.AddAttachment "$CurDir\RB_Upgrade.log"
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusing") = 2
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = "in-v3.mailjet.com"
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 587
@@ -161,33 +162,34 @@ Start-Sleep -s 5
 ForEach ($sql in get-ChildItem "Custom\*.sql") {
 	& SQLCMD -E -d SQUIRREL -i "$sql"
 }
-copy-item "Custom\*.class" "$env:SQCURDIR\Program\Pos\Extended" -force
+Copy-Item "Custom\*.class" "$env:SQCURDIR\Program\Pos\Extended" -force
 
 #HTM
-copy-item "Browser\English_Canadian\*" "$env:SQCURDIR\Browser\English_Canadian" -force
+Copy-Item "Browser\English_Canadian\*" "$env:SQCURDIR\Browser\English_Canadian" -force
 
 #Program
-copy-item "Program\*" "$env:SQCURDIR\Program" -force -recurse
+Copy-Item "Program\*" "$env:SQCURDIR\Program" -force -recurse
 
 #Drivers
-copy-item "Drivers\*" "$env:SQCURDIR\Program\Drivers" -force
+Copy-Item "Drivers\*" "$env:SQCURDIR\Program\Drivers" -force
 
 #Bootptab_Update
-stop-process -name "bootpdnt.exe" -force -ErrorAction 'silentlycontinue'
-stop-process -name "tftpdnt.exe" -force -ErrorAction 'silentlycontinue'
-copy-item "C:\Agent\bootptab*" "$env:SQCURDIR\tftpboot" -force
+TASKKILL /F /IM "bootpdnt.exe"
+TASKKILL /F /IM "tftpdnt.exe"
+Copy-Item "C:\Agent\bootptab*" "$env:SQCURDIR\tftpboot" -force
 net start tftpdnt
 net start bootpdnt
 & SqShutdown -AUTOEXIT
 Start-Sleep -s 2
 
 #END
-copy-item "+Upgrade_Confirmation_Message.pdf" "c:\agent" -force
+Copy-Item "+Upgrade_Confirmation_Message.pdf" "c:\agent" -force
 
 Rename-ItemProperty -path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -name PendingFileRenameOperationsBAK -newname PendingFileRenameOperations -ErrorAction 'silentlycontinue'
 $Cleanup = @"
 @ECHO OFF
 REG COPY "HKLM\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK" "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" /F
+REG DELETE "HKLM\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK" /F
 explorer.exe "c:\agent\+Upgrade_Confirmation_Message.pdf"
 SCHTASKS /delete /tn RB_Upgrade /f
 DEL "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cleanup.bat"
@@ -199,8 +201,6 @@ Start-Sleep -s 2
 & shutdown /r /f /t 05
 
 EXIT
-
-
 }
 
 & $Script | Out-file "$CurDir\RB_Upgrade.log" -Encoding ASCII
