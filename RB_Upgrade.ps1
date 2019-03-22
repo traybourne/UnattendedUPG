@@ -7,6 +7,7 @@ EXIT
 }
 $FAIL = {
 $Alert = @"
+WScript.Sleep 10*1000
 Set MyEmail = CreateObject("CDO.Message")
 MyEmail.Subject="UPGRADE FAILED"
 MyEmail.From=
@@ -24,8 +25,8 @@ MyEmail.Send
 set MyEmail=nothing
 "@
 $Alert | Set-Content "$env:TEMP\Alert.vbs" -Encoding ASCII
+Start-Sleep -s 2
 Start-Process -FilePath "$env:TEMP\Alert.vbs"
-Start-Sleep -s 10
 EXIT
 }
 
@@ -122,8 +123,7 @@ Set MyEmail = CreateObject("CDO.Message")
 MyEmail.Subject="UPGRADE STUCK"
 MyEmail.From=
 MyEmail.To=
-MyEmail.TextBody="RB Upgrade appears to be stuck at $Site, log file is attached. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
-MyEmail.AddAttachment "$CurDir\RB_Upgrade.log"
+MyEmail.TextBody="RB Upgrade appears to be stuck at $Site. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusing") = 2
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = "in-v3.mailjet.com"
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 587
