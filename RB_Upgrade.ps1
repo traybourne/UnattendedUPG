@@ -203,4 +203,4 @@ Start-Sleep -s 2
 EXIT
 }
 
-& $Script | Out-file "$CurDir\RB_Upgrade.log" -Encoding ASCII
+Trace-Command ParameterBinding {& $Script} -PSHost -FilePath "$CurDir\RB_Upgrade.log" -Option ExecutionFlow
