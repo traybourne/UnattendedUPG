@@ -12,8 +12,9 @@ Set MyEmail = CreateObject("CDO.Message")
 MyEmail.Subject="UPGRADE FAILED"
 MyEmail.From=
 MyEmail.To=
-MyEmail.TextBody="RB Upgrade appears to have failed at $Site, log file is attached. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
+MyEmail.TextBody="RB Upgrade appears to have failed at $Site, log files are attached. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
 MyEmail.AddAttachment "$CurDir\RB_Upgrade.log"
+MyEmail.AddAttachment "$CurDir\RB_UpgradeTrace.log"
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusing") = 2
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = "in-v3.mailjet.com"
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 587
@@ -30,6 +31,7 @@ Start-Process -FilePath "$env:TEMP\Alert.vbs"
 EXIT
 }
 
+Remove-Item "$CurDir\RB_UpgradeTrace.log" -Force -ErrorAction 'silentlycontinue'
 $Script = {
 Function MsgBox($Message, $Type, $Title)
 {
@@ -56,7 +58,7 @@ Write-Output "BACKING UP DATABASES..."
 
 Write-Output "ZIPPING UP DATABASES..."
 
-Remove-Item "C:\Agent\upgrade backups\$Date\databasebackups\databasebackups.zip" -force -ErrorAction 'silentlycontinue'
+Remove-Item "C:\Agent\upgrade backups\$Date\databasebackups\databasebackups.zip" -Force -ErrorAction 'silentlycontinue'
 
 & zip -j -r "C:\Agent\upgrade backups\$Date\databasebackups\databasebackups.zip" "C:\Agent\upgrade backups\$Date\databasebackups"
 
@@ -119,11 +121,16 @@ Rename-ItemProperty -path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manage
 
 $AlertCountdown = @"
 WScript.Sleep 90*60*1000
+Set objFSO = CreateObject("Scripting.FileSystemObject")
 Set MyEmail = CreateObject("CDO.Message")
+objFSO.CopyFile "$CurDir\RB_Upgrade.log", "$CurDir\_RB_Upgrade.log"
+objFSO.CopyFile "$CurDir\RB_UpgradeTrace.log", "$CurDir\_RB_UpgradeTrace.log"
 MyEmail.Subject="UPGRADE STUCK"
 MyEmail.From=
 MyEmail.To=
-MyEmail.TextBody="RB Upgrade appears to be stuck at $Site. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
+MyEmail.TextBody="RB Upgrade appears to be stuck at $Site, log files are attached. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
+MyEmail.AddAttachment "$CurDir\_RB_Upgrade.log"
+MyEmail.AddAttachment "$CurDir\_RB_UpgradeTrace.log"
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusing") = 2
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = "in-v3.mailjet.com"
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 587
@@ -197,10 +204,11 @@ EXIT
 "@
 $Cleanup | Set-Content "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cleanup.bat" -Encoding ASCII
 
-Start-Sleep -s 2  
-& shutdown /r /f /t 05
+Start-Sleep -s 2
+
+Start-Process -FilePath "shutdown.exe" -ArgumentList "/r /f /t 05"
 
 EXIT
 }
 
-Trace-Command ParameterBinding {& $Script} -PSHost -FilePath "$CurDir\RB_Upgrade.log" -Option ExecutionFlow
+Trace-Command ParameterBinding {& $Script 2>&1 > "$CurDir\RB_Upgrade.log"} -PSHost -FilePath "$CurDir\RB_UpgradeTrace.log" -Option ExecutionFlow
