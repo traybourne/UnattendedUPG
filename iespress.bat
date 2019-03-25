@@ -1,5 +1,12 @@
 @echo off
+for %%X in (cscript.exe) do (set FOUND=%%~$PATH:X)
+if defined FOUND goto START
+:ERROR
+echo ERROR OCCURRED - CHECK THE PATH ENVIRONMENT VARIABLE
+PAUSE
+EXIT
 
+:START
 for /F "delims=" %%A in ("%0") do set ARG0=%%~dpnxA
 for /F "delims=" %%A in ("%ARG0%") do set THIS=%%~nxA
 for /F "delims=" %%A in ("%ARG0%") do set WDIR=%%~dpA
@@ -16,10 +23,4 @@ del /F /Q excludes.txt
 
 cd "%WDIR%"
 start %*
-EXIT
-
-:ERROR
-cls
-echo ERROR OCCURRED - CHECK THE PATH ENVIRONMENT VARIABLE
-PAUSE
 EXIT

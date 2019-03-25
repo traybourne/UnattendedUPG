@@ -7,7 +7,6 @@ goto FIN
 
 :FIN
 del /F /Q Autologon.exe
-del /F /Q EULA.reg
 del /F /Q SetSchedUpgrade.ps1
 (goto) 2>nul & del /F /Q "%~f0"
 
