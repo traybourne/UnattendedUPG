@@ -35,12 +35,11 @@ ECHO PostInstallCmd=^<None^> >> %TEMP%\SetSchedUpgrade.SED
 ECHO AdminQuietInstCmd= >> %TEMP%\SetSchedUpgrade.SED
 ECHO UserQuietInstCmd= >> %TEMP%\SetSchedUpgrade.SED
 ECHO FILE0="Autologon.exe" >> %TEMP%\SetSchedUpgrade.SED
-ECHO FILE1="EULA.reg" >> %TEMP%\SetSchedUpgrade.SED
-ECHO FILE2="Launch.bat" >> %TEMP%\SetSchedUpgrade.SED
-ECHO FILE3="SetSchedUpgrade.ps1" >> %TEMP%\SetSchedUpgrade.SED
-ECHO FILE4="iespress.bat" >> %TEMP%\SetSchedUpgrade.SED
-ECHO FILE5="iespress.vbs" >> %TEMP%\SetSchedUpgrade.SED
-ECHO FILE6="RB_Upgrade.ps1" >> %TEMP%\SetSchedUpgrade.SED
+ECHO FILE1="Launch.bat" >> %TEMP%\SetSchedUpgrade.SED
+ECHO FILE2="SetSchedUpgrade.ps1" >> %TEMP%\SetSchedUpgrade.SED
+ECHO FILE3="iespress.bat" >> %TEMP%\SetSchedUpgrade.SED
+ECHO FILE4="iespress.vbs" >> %TEMP%\SetSchedUpgrade.SED
+ECHO FILE5="RB_Upgrade.ps1" >> %TEMP%\SetSchedUpgrade.SED
 ECHO [SourceFiles] >> %TEMP%\SetSchedUpgrade.SED
 ECHO SourceFiles0=%~dp0\ >> %TEMP%\SetSchedUpgrade.SED
 ECHO [SourceFiles0] >> %TEMP%\SetSchedUpgrade.SED
@@ -50,6 +49,5 @@ ECHO %%FILE2%%= >> %TEMP%\SetSchedUpgrade.SED
 ECHO %%FILE3%%= >> %TEMP%\SetSchedUpgrade.SED
 ECHO %%FILE4%%= >> %TEMP%\SetSchedUpgrade.SED
 ECHO %%FILE5%%= >> %TEMP%\SetSchedUpgrade.SED
-ECHO %%FILE6%%= >> %TEMP%\SetSchedUpgrade.SED
 
 C:\Windows\SysWOW64\iexpress.exe /n /q /m %TEMP%\SetSchedUpgrade.SED

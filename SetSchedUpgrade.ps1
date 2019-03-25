@@ -49,9 +49,8 @@ Start-Sleep 2
 if (-not (Test-Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK")) {
 REG COPY "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" "HKLM\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK" /F
 }
-REG IMPORT EULA.reg
 MsgBox "Please enter the Windows password in the next prompt and press Enable to allow unattended reboot for the upgrade" "Information" "Unattended Upgrade"
-Start-Process -FilePath "Autologon.exe" -Wait
+Start-Process -FilePath "Autologon.exe" -ArgumentList "/accepteula" -Wait
 $Format = ($([System.Globalization.DateTimeFormatInfo]::CurrentInfo.ShortDatePattern) -replace 'M+/', 'MM/') -replace 'd+/', 'dd/'
 schtasks /create /tn "RB_Upgrade" /tr "'Powershell.exe' -executionpolicy remotesigned -File '$UpgradePath' silent" /SC ONCE /SD (get-date (get-date -Date "$SchedDate") -Format $Format) /ST $SchedTime /ru SYSTEM
 MsgBox "Task Scheduler will now launch, please confirm task was created successfully" "Information" "Unattended Upgrade"
