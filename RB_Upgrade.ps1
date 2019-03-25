@@ -110,7 +110,8 @@ cmd /c mklink "$CurDir\SquirrelSetup.log" "$env:TEMP\Setup Log $Date #001.txt"
 
 Write-Output "KILLING ALL SQUIRREL PROCESSES..."
 ForEach ($exe in get-ChildItem "$env:SQCURDIR\Program" -Filter *.exe) {
-	TASKKILL /F /IM "$exe"
+	$name = [io.path]::GetFileNameWithoutExtension("$exe")
+	Stop-Process -Name "$name" -Force -ErrorAction 'silentlycontinue'
 }
 
 NET STOP VxAgent /yes
