@@ -97,6 +97,7 @@ New-Item "C:\\Agent" -type directory -force
 Copy-Item "$env:SQCURDIR\tftpboot\bootptab*.*" "C:\Agent" -force
 
 #SQL_Rename
+Write-Output "CHECKING IF SQL NAME MATCHES PC NAME..."
 $SQL_CURRENT = & sqlcmd -E -Q "SET NOCOUNT ON; select @@SERVERNAME" -W -h-1
 if ($SQL_CURRENT -ne $env:COMPUTERNAME) {
 & SQLCMD -E -Q "sp_dropserver '$SQL_CURRENT'"
@@ -107,6 +108,7 @@ if ($SQL_CURRENT -ne $env:COMPUTERNAME) {
 Remove-Item "$CurDir\SquirrelSetup.log" -force -ErrorAction 'silentlycontinue'
 cmd /c mklink "$CurDir\SquirrelSetup.log" "$env:TEMP\Setup Log $Date #001.txt"
 
+Write-Output "KILLING ALL SQUIRREL PROCESSES..."
 ForEach ($exe in get-ChildItem "$env:SQCURDIR\Program" -Filter *.exe) {
 	TASKKILL /F /IM "$exe"
 }
@@ -158,6 +160,7 @@ EXIT
 $UpgradeWatchdog | Set-Content "$env:TEMP\UpgradeWatchdog.bat" -Encoding ASCII
 Start-Process -FilePath "$env:TEMP\UpgradeWatchdog.bat" -WindowStyle Hidden
 
+Write-Output "RUNNING REMOTE UPGRADE..."
 $p = Start-Process -passthru "$CurDir\Software\*RemoteUpgrade*.exe" -ArgumentList "/SILENT /NORESTART /NOCANCEL /CLOSEAPPLICATIONS /NOARCHIVE"
 $p.WaitForExit()
 
@@ -165,6 +168,7 @@ $p.WaitForExit()
 #TASKKILL /FI "windowtitle eq  Upgrade Watchdog*" /F /T 
 
 #Custom
+Write-Output "INSTALLING ANY CUSTOM PIECES AND OPTIONAL MODULES FOUND..."
 Start-Sleep -s 5
 ForEach ($sql in get-ChildItem "Custom\*.sql") {
 	& SQLCMD -E -d SQUIRREL -i "$sql"
@@ -186,10 +190,11 @@ TASKKILL /F /IM "tftpdnt.exe"
 Copy-Item "C:\Agent\bootptab*" "$env:SQCURDIR\tftpboot" -force
 net start tftpdnt
 net start bootpdnt
-& SqShutdown -AUTOEXIT
-Start-Sleep -s 2
+Start-Process -FilePath "SqShutdown.exe" -ArgumentList "-AUTOEXIT"
+Start-Sleep -s 3
 
 #END
+Write-Output "CREATING CLEANUP SCRIPT AND REBOOTING PC..."
 Copy-Item "+Upgrade_Confirmation_Message.pdf" "c:\agent" -force
 
 Rename-ItemProperty -path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -name PendingFileRenameOperationsBAK -newname PendingFileRenameOperations -ErrorAction 'silentlycontinue'
