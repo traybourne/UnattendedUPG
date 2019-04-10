@@ -47,7 +47,7 @@ if ($SchedTime -match '^\w\w\:\w\w$') {
 Clear-Host
 Start-Sleep 2
 if (-not (Test-Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK")) {
-REG COPY "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" "HKLM\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK" /F
+Copy-Item -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK" -Force
 }
 MsgBox "Please enter the Windows password in the next prompt and press Enable to allow unattended reboot for the upgrade" "Information" "Unattended Upgrade"
 Start-Process -FilePath "Autologon.exe" -ArgumentList "/accepteula" -Wait
