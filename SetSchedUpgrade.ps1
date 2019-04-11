@@ -46,7 +46,7 @@ if ($SchedTime -match '^\w\w\:\w\w$') {
         }
 Clear-Host
 Start-Sleep 2
-if (-not (Test-Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK")) {
+if (!(Test-Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK")) {
 Copy-Item -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK" -Force
 }
 MsgBox "Please enter the Windows password in the next prompt and press Enable to allow unattended reboot for the upgrade" "Information" "Unattended Upgrade"
