@@ -1,4 +1,5 @@
 ;--------------------------------
+!include x64.nsh
 
 ; The name of the installer
 Name "UnattendedUPG"
@@ -33,6 +34,10 @@ File .\Launch.bat
 File .\SetSchedUpgrade.ps1
 File .\RB_Upgrade.ps1
   
-Exec "$INSTDIR\Launch.bat"
+${If} ${RunningX64}
+Exec '"C:\Windows\sysnative\cmd.exe" /c "$INSTDIR\Launch.bat"'
+${Else}
+Exec '"$INSTDIR\Launch.bat"'
+${EndIf}  
   
 SectionEnd
