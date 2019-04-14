@@ -49,7 +49,7 @@ Start-Sleep 2
 if (!(Test-Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK")) {
 Copy-Item -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK" -Force
 }
-MsgBox "Please enter the Windows password in the next prompt and press Enable to allow unattended reboot for the upgrade" "Information" "Unattended Upgrade"
+MsgBox "Please enter the Windows username and password in the next prompt and press Enable to allow unattended reboot for the upgrade" "Information" "Unattended Upgrade"
 Start-Process -FilePath "Autologon.exe" -ArgumentList "/accepteula" -Wait
 $Format = ($([System.Globalization.DateTimeFormatInfo]::CurrentInfo.ShortDatePattern) -replace 'M+/', 'MM/') -replace 'd+/', 'dd/'
 schtasks /create /tn "RB_Upgrade" /tr "'Powershell.exe' -executionpolicy remotesigned -File '$UpgradePath' silent" /SC ONCE /SD (get-date (get-date -Date "$SchedDate") -Format $Format) /ST $SchedTime /ru SYSTEM
