@@ -33,7 +33,7 @@ Clear-Host
 
 $TimePrompt = {
 try{
-$SchedTime  = InputBox "Enter the TIME you would like to schedule the upgrade for in 24 hour format (e.g. 03:00)"
+$SchedTime  = InputBox "Enter the TIME you would like to schedule the upgrade for in 24 hour format (e.g. 03:00)" "Unattended Upgrade"
 if (!$SchedTime) { Exit }
 if ($SchedTime -match '^\w\w\:\w\w$') {
     $pattern = 'HH\:mm'
