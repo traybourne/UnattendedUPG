@@ -53,7 +53,7 @@ MsgBox "Please enter the Windows username and password in the next prompt and pr
 Start-Process -FilePath "Autologon.exe" -ArgumentList "/accepteula" -Wait
 $Format = (((((([System.Globalization.DateTimeFormatInfo]::CurrentInfo.ShortDatePattern) -replace 'M+/', 'MM/') -replace 'd+/', 'dd/') -replace 'MMM', 'MM') -replace '-yy+', '-yyyy') -replace '/yy+', '/yyyy') -replace 'yy+-', 'yyyy-'
 $ParseDate = [DateTime]::Parse($SchedDate, $Culture)
-schtasks /create /tn "RB_Upgrade" /tr "'Powershell.exe' -executionpolicy remotesigned -File '$UpgradePath' silent" /SC ONCE /SD (get-date $ParseDate -format $Format) /ST $SchedTime /ru SYSTEM
+schtasks /create /tn "RB_Upgrade" /tr "'Powershell.exe' -executionpolicy remotesigned -File '$UpgradePath' silent" /SC ONCE /SD (get-date $ParseDate -format $Format) /ST $SchedTime /ru SYSTEM /rl HIGHEST
 MsgBox "Task Scheduler will now launch, please confirm task was created successfully" "Information" "Unattended Upgrade"
 Start-Process -FilePath "taskschd.msc"
 EXIT
