@@ -33,7 +33,7 @@ Clear-Host
 
 $TimePrompt = {
 try{
-$SchedTime  = InputBox "Enter the TIME you would like to schedule the upgrade for in 24 hour format (e.g. 03:00)"
+$SchedTime  = InputBox "Enter the TIME you would like to schedule the upgrade for in 24 hour format (e.g. 03:00)" "Unattended Upgrade"
 if (!$SchedTime) { Exit }
 if ($SchedTime -match '^\w\w\:\w\w$') {
     $pattern = 'HH\:mm'
@@ -49,7 +49,7 @@ Start-Sleep 2
 if (!(Test-Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK")) {
 Copy-Item -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinlogonBAK" -Force
 }
-MsgBox "Please enter the Windows password in the next prompt and press Enable to allow unattended reboot for the upgrade" "Information" "Unattended Upgrade"
+MsgBox "Please enter the Windows username and password in the next prompt and press Enable to allow unattended reboot for the upgrade" "Information" "Unattended Upgrade"
 Start-Process -FilePath "Autologon.exe" -ArgumentList "/accepteula" -Wait
 $Format = (((((([System.Globalization.DateTimeFormatInfo]::CurrentInfo.ShortDatePattern) -replace 'M+/', 'MM/') -replace 'd+/', 'dd/') -replace 'MMM', 'MM') -replace '-yy+', '-yyyy') -replace '/yy+', '/yyyy') -replace 'yy+-', 'yyyy-'
 $ParseDate = [DateTime]::Parse($SchedDate, $Culture)
