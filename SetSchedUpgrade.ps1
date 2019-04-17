@@ -1,4 +1,5 @@
-﻿Function MsgBox($Message, $Type, $Title)
+﻿$CurDir = (Split-Path $MyInvocation.Mycommand.Path)
+Function MsgBox($Message, $Type, $Title)
 {
    [void][System.Reflection.Assembly]::LoadWithPartialName("Microsoft.VisualBasic")
    [Microsoft.VisualBasic.Interaction]::MsgBox($Message, "SystemModal, $Type", $Title)
@@ -10,9 +11,14 @@ Function InputBox($Message, $Title)
    [Microsoft.VisualBasic.Interaction]::InputBox($Message, $Title)
 }
 
-$UpgradePath = ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.ps1')
-$LogPath = ((Split-Path $MyInvocation.Mycommand.Path) + '\RB_Upgrade.log')
+$UpgradePath = "$CurDir\RB_Upgrade.ps1"
+$LogPath = "$CurDir\RB_Upgrade.log"
 $DatePrompt = {
+if (!(Test-Path "$CurDir\Software\*RemoteUpgrade*.exe")) {
+	MsgBox "Remote Upgrade file not found! please ensure the Software folder with the Remote Upgrade file is in the same folder as this exe" "Critical" "UnattendedUPG Build"
+	Exit
+}
+
 try{
 $SchedDate = InputBox "Enter the DATE you would like to schedule the upgrade for (e.g. 04/24/2018)" "Unattended Upgrade"
 if (!$SchedDate) { Exit }
