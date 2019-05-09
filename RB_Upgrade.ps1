@@ -116,6 +116,8 @@ ForEach ($exe in get-ChildItem "$env:SQCURDIR\Program" -Filter *.exe) {
 
 NET STOP VxAgent /yes
 TASKKILL /F /IM VxAgent.exe
+TASKKILL /F /IM java.exe
+TASKKILL /F /IM javaw.exe
 TASKKILL /F /IM mmc.exe
 NET STOP MSSQLSERVER /yes
 TASKKILL /F /IM sqlservr.exe
