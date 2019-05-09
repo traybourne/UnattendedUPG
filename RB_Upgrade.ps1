@@ -115,12 +115,12 @@ ForEach ($exe in get-ChildItem "$env:SQCURDIR\Program" -Filter *.exe) {
 }
 
 NET STOP VxAgent /yes
-TASKKILL /F /IM VxAgent.exe
-TASKKILL /F /IM java.exe
-TASKKILL /F /IM javaw.exe
-TASKKILL /F /IM mmc.exe
+Stop-Process -Name "VxAgent" -Force -ErrorAction 'silentlycontinue'
+Stop-Process -Name "java" -Force -ErrorAction 'silentlycontinue'
+Stop-Process -Name "javaw" -Force -ErrorAction 'silentlycontinue'
+Stop-Process -Name "mmc" -Force -ErrorAction 'silentlycontinue'
 NET STOP MSSQLSERVER /yes
-TASKKILL /F /IM sqlservr.exe
+Stop-Process -Name "sqlservr" -Force -ErrorAction 'silentlycontinue' sqlservr.exe
 NET START MSSQLSERVER
 Rename-ItemProperty -path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -name PendingFileRenameOperations -newname PendingFileRenameOperationsBAK -ErrorAction 'silentlycontinue'
 
@@ -188,8 +188,8 @@ Copy-Item "Program\*" "$env:SQCURDIR\Program" -force -recurse
 Copy-Item "Drivers\*" "$env:SQCURDIR\Program\Drivers" -force
 
 #Bootptab_Update
-TASKKILL /F /IM "bootpdnt.exe"
-TASKKILL /F /IM "tftpdnt.exe"
+Stop-Process -Name "bootpdnt" -Force -ErrorAction 'silentlycontinue'
+Stop-Process -Name "tftpdnt" -Force -ErrorAction 'silentlycontinue'
 Copy-Item "C:\Agent\bootptab*" "$env:SQCURDIR\tftpboot" -force
 net start tftpdnt
 net start bootpdnt
