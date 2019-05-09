@@ -129,13 +129,13 @@ WScript.Sleep 90*60*1000
 Set objFSO = CreateObject("Scripting.FileSystemObject")
 Set MyEmail = CreateObject("CDO.Message")
 objFSO.CopyFile "$CurDir\RB_Upgrade.log", "$CurDir\_RB_Upgrade.log"
-objFSO.CopyFile "$CurDir\RB_UpgradeTrace.log", "$CurDir\_RB_UpgradeTrace.log"
+objFSO.CopyFile "$env:TEMP\Setup Log $Date #001.txt", "$env:TEMP\_Setup Log $Date #001.txt"
 MyEmail.Subject="UPGRADE STUCK"
 MyEmail.From=
 MyEmail.To=
 MyEmail.TextBody="RB Upgrade appears to be stuck at $Site, log files are attached. Attempt to get a connection into the site to verify status of upgrade. <T1>6044123308</T1>"
 MyEmail.AddAttachment "$CurDir\_RB_Upgrade.log"
-MyEmail.AddAttachment "$CurDir\_RB_UpgradeTrace.log"
+MyEmail.AddAttachment "$env:TEMP\_Setup Log $Date #001.txt"
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/sendusing") = 2
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = "in-v3.mailjet.com"
 MyEmail.Configuration.Fields.Item ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 587
